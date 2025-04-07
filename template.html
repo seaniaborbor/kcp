@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz | Knowledge Checkpoint</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --accent-color: #f72585;
+            --correct-color: #4cc9f0;
+            --incorrect-color: #f72585;
+            --sidebar-width: 250px;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            min-height: 100vh;
+            transition: all 0.3s;
+        }
+        
+        /* Sidebar Styles (same as before) */
+        #sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            transition: all 0.3s;
+            z-index: 1000;
+            box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        #sidebar.collapsed {
+            left: calc(-1 * var(--sidebar-width));
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+        
+        .sidebar-menu a {
+            display: block;
+            padding: 15px 20px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+            margin: 5px 10px;
+            border-radius: 4px;
+        }
+        
+        .sidebar-menu a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent-color);
+            transform: translateX(5px);
+        }
+        
+        .sidebar-menu a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        #content {
+            margin-left: var(--sidebar-width);
+            transition: all 0.3s;
+            min-height: 100vh;
+        }
+        
+        #content.expanded {
+            margin-left: 0;
+        }
+        
+        /* Toggle Button */
+        #sidebarCollapse {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            z-index: 1001;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+        }
+        
+        #sidebarCollapse:hover {
+            transform: scale(1.1);
+            background: var(--accent-color);
+        }
+        
+        /* Quiz Container */
+        .quiz-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .quiz-title {
+            color: var(--secondary-color);
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .progress-container {
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            transition: width 0.3s ease;
+        }
+        
+        .question-container {
+            margin-bottom: 30px;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .question-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--secondary-color);
+        }
+        
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        
+        .option-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            background: white;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .option-btn:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .option-btn.correct {
+            background-color: rgba(76, 201, 240, 0.1);
+            border-color: var(--correct-color);
+            color: var(--correct-color);
+        }
+        
+        .option-btn.incorrect {
+            background-color: rgba(247, 37, 133, 0.1);
+            border-color: var(--incorrect-color);
+            color: var(--incorrect-color);
+        }
+        
+        .option-btn.disabled {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        
+        .option-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+        
+        .option-btn.correct::after {
+            background-color: var(--correct-color);
+            border-color: var(--correct-color);
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+        
+        .option-btn.incorrect::after {
+            background-color: var(--incorrect-color);
+            border-color: var(--incorrect-color);
+            content: '\f00d';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+        
+        .option-text {
+            margin-left: 35px;
+        }
+        
+        .next-btn {
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            border: none;
+            color: white;
+            font-weight: 600;
+            letter-spacing: 1px;
+            padding: 12px 30px;
+            border-radius: 10px;
+            transition: all 0.3s;
+            display: block;
+            margin: 30px auto 0;
+        }
+        
+        .next-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .quiz-result {
+            text-align: center;
+            padding: 30px;
+            display: none;
+        }
+        
+        .result-icon {
+            font-size: 5rem;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+        }
+        
+        .result-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--secondary-color);
+        }
+        
+        .score-text {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+        
+        .restart-btn {
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .restart-btn:hover {
+            background: var(--secondary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            #sidebar {
+                left: calc(-1 * var(--sidebar-width));
+            }
+            
+            #sidebar.collapsed {
+                left: 0;
+            }
+            
+            #content {
+                margin-left: 0;
+            }
+            
+            #content.expanded {
+                margin-left: var(--sidebar-width);
+            }
+            
+            .quiz-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h3>Developer Links</h3>
+        </div>
+        <div class="sidebar-menu">
+            <a href="index.html" target="_blank" class="animate__animated animate__fadeInLeft animate__delay-1s">
+                <i class="fas fa-home"></i> Home
+            </a>
+            <a href="http://borbor.epizy.com/" target="_blank" class="animate__animated animate__fadeInLeft">
+                <i class="fas fa-user"></i> About Me
+            </a>
+            <a href="https://web.facebook.com/tarnue.borbor" target="_blank" class="animate__animated animate__fadeInLeft animate__delay-1s">
+                <i class="fab fa-facebook"></i> Facebook
+            </a>
+            <a href="https://github.com/seaniaborbor" target="_blank" class="animate__animated animate__fadeInLeft animate__delay-2s">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+        </div>
+    </div>
+
+    <!-- Page Content -->
+    <div id="content">
+        <!-- Toggle Button -->
+        <button type="button" id="sidebarCollapse" class="btn">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="container py-5">
+            <div class="quiz-container">
+                <!-- Quiz Header -->
+                <div class="quiz-header">
+                    <h2 class="quiz-title">Industrial Revolution Quiz</h2>
+                    <p>Test your knowledge about this transformative historical period</p>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                </div>
+                
+                <!-- Question Container -->
+                <div id="questionContainer">
+                    <!-- Questions will be inserted here by JavaScript -->
+                </div>
+                
+                <!-- Next Button -->
+                <button class="next-btn" id="nextBtn">Next Question</button>
+                
+                <!-- Quiz Result -->
+                <div class="quiz-result" id="quizResult">
+                    <i class="fas fa-trophy result-icon"></i>
+                    <h3 class="result-text">Quiz Completed!</h3>
+                    <p class="score-text">You scored <span id="finalScore">0</span> out of <span id="totalQuestions">0</span></p>
+                    <button class="restart-btn" id="restartBtn">Restart Quiz</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script>
+        // Quiz Questions (randomized order)
+        const quizQuestions = [
+    {
+        question: "Which country is considered the birthplace of the Industrial Revolution?",
+        options: [
+            "France",
+            "Germany",
+            "Great Britain",
+            "United States"
+        ],
+        answer: "Great Britain"
+    },
+    {
+        question: "What was the main purpose of the enclosure movement?",
+        options: [
+            "To protect wildlife",
+            "To consolidate land for more efficient farming",
+            "To create public parks",
+            "To build factory towns"
+        ],
+        answer: "To consolidate land for more efficient farming"
+    },
+    {
+        question: "Which invention by James Watt was crucial to industrialization?",
+        options: [
+            "The telegraph",
+            "The improved steam engine",
+            "The power loom",
+            "The cotton gin"
+        ],
+        answer: "The improved steam engine"
+    },
+    {
+        question: "What was the primary industry that first industrialized?",
+        options: [
+            "Steel production",
+            "Textile manufacturing",
+            "Coal mining",
+            "Agriculture"
+        ],
+        answer: "Textile manufacturing"
+    },
+    {
+        question: "Which Enlightenment philosopher wrote 'The Social Contract'?",
+        options: [
+            "John Locke",
+            "Voltaire",
+            "Jean-Jacques Rousseau",
+            "Montesquieu"
+        ],
+        answer: "Jean-Jacques Rousseau"
+    },
+    {
+        question: "What concept did John Locke's 'natural rights' include?",
+        options: [
+            "Life, liberty, and property",
+            "Freedom of speech only",
+            "Right to bear arms",
+            "Right to education"
+        ],
+        answer: "Life, liberty, and property"
+    },
+    {
+        question: "What was the main purpose of the Factory Acts in Britain?",
+        options: [
+            "To increase factory production",
+            "To improve working conditions",
+            "To build more factories",
+            "To regulate trade"
+        ],
+        answer: "To improve working conditions"
+    },
+    {
+        question: "Which Enlightenment thinker championed freedom of speech and religion?",
+        options: [
+            "Thomas Hobbes",
+            "Voltaire",
+            "Denis Diderot",
+            "Adam Smith"
+        ],
+        answer: "Voltaire"
+    },
+    {
+        question: "What was the primary fuel source for early factories?",
+        options: [
+            "Wood",
+            "Coal",
+            "Oil",
+            "Water power"
+        ],
+        answer: "Coal"
+    },
+    {
+        question: "Which invention by Eli Whitney revolutionized cotton production?",
+        options: [
+            "The spinning jenny",
+            "The power loom",
+            "The cotton gin",
+            "The steam engine"
+        ],
+        answer: "The cotton gin"
+    },
+    {
+        question: "What was the main theme of Adam Smith's 'Wealth of Nations'?",
+        options: [
+            "Communism",
+            "Mercantilism",
+            "Laissez-faire economics",
+            "Feudalism"
+        ],
+        answer: "Laissez-faire economics"
+    },
+    {
+        question: "What was a major effect of industrialization on cities?",
+        options: [
+            "Decreased population",
+            "Improved sanitation",
+            "Rapid urbanization",
+            "Reduced pollution"
+        ],
+        answer: "Rapid urbanization"
+    },
+    {
+        question: "Which Enlightenment concept influenced the American Revolution?",
+        options: [
+            "Divine right of kings",
+            "Consent of the governed",
+            "Absolute monarchy",
+            "Feudal obligations"
+        ],
+        answer: "Consent of the governed"
+    },
+    {
+        question: "What was the main purpose of the spinning jenny?",
+        options: [
+            "To weave cloth",
+            "To spin multiple threads at once",
+            "To clean cotton",
+            "To power machinery"
+        ],
+        answer: "To spin multiple threads at once"
+    },
+    {
+        question: "Which Enlightenment work aimed to compile all human knowledge?",
+        options: [
+            "The Social Contract",
+            "The Encyclopedia",
+            "Wealth of Nations",
+            "Two Treatises of Government"
+        ],
+        answer: "The Encyclopedia"
+    },
+    {
+        question: "What transportation innovation was crucial for the Industrial Revolution?",
+        options: [
+            "The automobile",
+            "The airplane",
+            "The steam locomotive",
+            "The bicycle"
+        ],
+        answer: "The steam locomotive"
+    },
+    {
+        question: "Which group destroyed machinery in protest during the Industrial Revolution?",
+        options: [
+            "Suffragettes",
+            "Luddites",
+            "Chartists",
+            "Unionists"
+        ],
+        answer: "Luddites"
+    },
+    {
+        question: "What Enlightenment concept did Montesquieu contribute to government?",
+        options: [
+            "Divine right",
+            "Separation of powers",
+            "Absolute monarchy",
+            "Socialism"
+        ],
+        answer: "Separation of powers"
+    },
+    {
+        question: "What was a major health problem in industrial cities?",
+        options: [
+            "Obesity",
+            "Cholera epidemics",
+            "Vitamin deficiencies",
+            "Heart disease"
+        ],
+        answer: "Cholera epidemics"
+    },
+    {
+        question: "Which Enlightenment idea challenged absolute monarchy?",
+        options: [
+            "Feudalism",
+            "Divine right",
+            "Popular sovereignty",
+            "Mercantilism"
+        ],
+        answer: "Popular sovereignty"
+    }
+];
+
+        // Quiz Variables
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let shuffledQuestions = [];
+        
+        // DOM Elements
+        const questionContainer = document.getElementById('questionContainer');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressBar = document.getElementById('progressBar');
+        const quizResult = document.getElementById('quizResult');
+        const finalScore = document.getElementById('finalScore');
+        const totalQuestions = document.getElementById('totalQuestions');
+        const restartBtn = document.getElementById('restartBtn');
+        
+        // Initialize Quiz
+        function initQuiz() {
+            // Reset quiz variables
+            currentQuestionIndex = 0;
+            score = 0;
+            
+            // Shuffle questions and options
+            shuffledQuestions = [...quizQuestions];
+            shuffleArray(shuffledQuestions);
+            
+            // Hide result, show first question
+            quizResult.style.display = 'none';
+            nextBtn.style.display = 'block';
+            
+            // Load first question
+            loadQuestion();
+        }
+        
+        // Load Question
+        function loadQuestion() {
+            // Update progress bar
+            progressBar.style.width = `${(currentQuestionIndex / shuffledQuestions.length) * 100}%`;
+            
+            // Get current question
+            const currentQuestion = shuffledQuestions[currentQuestionIndex];
+            
+            // Shuffle options
+            const shuffledOptions = [...currentQuestion.options];
+            shuffleArray(shuffledOptions);
+            
+            // Create question HTML
+            let questionHTML = `
+                <div class="question-container">
+                    <div class="question-text">${currentQuestionIndex + 1}. ${currentQuestion.question}</div>
+                    <div class="options-container">
+            `;
+            
+            // Add options
+            shuffledOptions.forEach(option => {
+                questionHTML += `
+                    <button class="option-btn" onclick="selectOption(this, '${option}', '${currentQuestion.answer}')">
+                        <span class="option-text">${option}</span>
+                    </button>
+                `;
+            });
+            
+            questionHTML += `</div></div>`;
+            
+            // Insert into container
+            questionContainer.innerHTML = questionHTML;
+            
+            // Hide next button until answer is selected
+            nextBtn.style.display = 'none';
+        }
+        
+        // Select Option
+        function selectOption(selectedOption, selectedAnswer, correctAnswer) {
+            // Disable all options
+            const allOptions = document.querySelectorAll('.option-btn');
+            allOptions.forEach(option => {
+                option.classList.add('disabled');
+            });
+            
+            // Mark correct/incorrect
+            if (selectedAnswer === correctAnswer) {
+                selectedOption.classList.add('correct');
+                score++;
+            } else {
+                selectedOption.classList.add('incorrect');
+                // Highlight correct answer
+                allOptions.forEach(option => {
+                    if (option.querySelector('.option-text').textContent === correctAnswer) {
+                        option.classList.add('correct');
+                    }
+                });
+            }
+            
+            // Show next button
+            nextBtn.style.display = 'block';
+        }
+        
+        // Next Question
+        nextBtn.addEventListener('click', () => {
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex < shuffledQuestions.length) {
+                loadQuestion();
+            } else {
+                showResult();
+            }
+        });
+        
+        // Show Result
+        function showResult() {
+            questionContainer.style.display = 'none';
+            nextBtn.style.display = 'none';
+            quizResult.style.display = 'block';
+            
+            finalScore.textContent = score;
+            totalQuestions.textContent = shuffledQuestions.length;
+            
+            // Update progress bar to 100%
+            progressBar.style.width = '100%';
+        }
+        
+        // Restart Quiz
+        restartBtn.addEventListener('click', () => {
+            questionContainer.style.display = 'block';
+            initQuiz();
+        });
+        
+        // Shuffle Array (Fisher-Yates algorithm)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+        
+        // Sidebar toggle functionality
+        document.getElementById('sidebarCollapse').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+            document.getElementById('content').classList.toggle('expanded');
+            
+            // Change icon
+            const icon = this.querySelector('i');
+            if (icon.classList.contains('fa-bars')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        });
+        
+        // Start the quiz
+        initQuiz();
+    </script>
+</body>
+</html>

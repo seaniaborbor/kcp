@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Checkpoint | Test Your Understanding</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --accent-color: #f72585;
+            --sidebar-width: 250px;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            min-height: 100vh;
+            transition: all 0.3s;
+        }
+        
+        /* Sidebar Styles */
+        #sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            transition: all 0.3s;
+            z-index: 1000;
+            box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        #sidebar.collapsed {
+            left: calc(-1 * var(--sidebar-width));
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+        
+        .sidebar-menu a {
+            display: block;
+            padding: 15px 20px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+            margin: 5px 10px;
+            border-radius: 4px;
+        }
+        
+        .sidebar-menu a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent-color);
+            transform: translateX(5px);
+        }
+        
+        .sidebar-menu a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        #content {
+            margin-left: var(--sidebar-width);
+            transition: all 0.3s;
+            min-height: 100vh;
+        }
+        
+        #content.expanded {
+            margin-left: 0;
+        }
+        
+        /* Toggle Button */
+        #sidebarCollapse {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            z-index: 1001;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+        }
+        
+        #sidebarCollapse:hover {
+            transform: scale(1.1);
+            background: var(--accent-color);
+        }
+        
+        /* Page Header */
+        .page-header {
+            background: white;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+        }
+        
+        .page-title {
+            color: var(--secondary-color);
+            font-weight: 700;
+            text-align: center;
+            margin: 0;
+            font-size: 2.2rem;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Quiz Code Input */
+        .quiz-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transform: translateY(0);
+            transition: all 0.3s;
+        }
+        
+        .quiz-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .form-control {
+            height: 50px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            font-size: 1.1rem;
+            padding-left: 20px;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+        }
+        
+        .btn-test {
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            border: none;
+            color: white;
+            font-weight: 600;
+            letter-spacing: 1px;
+            padding: 12px 30px;
+            border-radius: 10px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-test:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-test:active {
+            transform: translateY(-1px);
+        }
+        
+        .btn-test::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        .btn-test:hover::after {
+            left: 100%;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            #sidebar {
+                left: calc(-1 * var(--sidebar-width));
+            }
+            
+            #sidebar.collapsed {
+                left: 0;
+            }
+            
+            #content {
+                margin-left: 0;
+            }
+            
+            #content.expanded {
+                margin-left: var(--sidebar-width);
+            }
+        }
+        
+        /* Animations */
+        .animate-bounce {
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(67, 97, 238, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(67, 97, 238, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(67, 97, 238, 0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h3>Developer Links</h3>
+        </div>
+        <div class="sidebar-menu">
+            <a href="index.html" target="_blank" class="animate__animated animate__fadeInLeft animate__delay-1s">
+                <i class="fas fa-home"></i> Home
+            </a>
+            <a href="http://borbor.epizy.com/" target="_blank" class="animate__animated animate__fadeInLeft">
+                <i class="fas fa-user"></i> About Me
+            </a>
+            <a href="https://web.facebook.com/tarnue.borbor" target="_blank" class="animate__animated animate__fadeInLeft animate__delay-1s">
+                <i class="fab fa-facebook"></i> Facebook
+            </a>
+            <a href="https://github.com/seaniaborbor" target="_blank" class="animate__animated animate__fadeInLeft animate__delay-2s">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+        </div>
+    </div>
+
+    <!-- Page Content -->
+    <div id="content">
+        <!-- Toggle Button -->
+        <button type="button" id="sidebarCollapse" class="btn animate__animated animate__fadeInRight">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="container py-5">
+            <!-- Page Header -->
+            <div class="page-header animate__animated animate__fadeInDown">
+                <h1 class="page-title">Knowledge Checkpoint</h1>
+                <p class="text-center text-muted mt-2" id="typing">Test your understanding of the Industrial Revolution & Enlightenment</p>
+            </div>
+
+            <!-- Quiz Code Input -->
+            <div class="quiz-container animate__animated animate__fadeInUp">
+                <div class="text-center mb-4">
+                    <i class="fas fa-key fa-3x mb-3" style="color: var(--primary-color);"></i>
+                    <h3>Enter Your Quiz Code</h3>
+                    <p class="text-muted">Enter the code from your textbook to access your quiz</p>
+                </div>
+                
+                <div class="input-group mb-4">
+                    <input type="text" class="form-control pulse" id="quizCode" placeholder="e.g. IR-QUIZ-001" aria-label="Quiz Code">
+                </div>
+                
+                <div class="d-grid">
+                    <button class="btn btn-test" id="testMeBtn">
+                        <span class="btn-text">Test Me!</span>
+                        <span class="spinner-border spinner-border-sm d-none" id="spinner"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script>
+        // Quiz database
+        const quizzes = [
+            {
+                "code": "11thgr5pdhistoquiz",
+                "htmlfile": "11thgr5pdhistoquiz.html"
+            },
+            {
+                "code": "IR-QUIZ-002",
+                "htmlfile": "enlightenment-thinkers.html"
+            },
+            {
+                "code": "IR-QUIZ-003",
+                "htmlfile": "industrial-impact.html"
+            },
+            {
+                "code": "TEST123",
+                "htmlfile": "example.html"
+            }
+            // Add more quizzes as needed
+        ];
+
+        // Sidebar toggle functionality
+        document.getElementById('sidebarCollapse').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+            document.getElementById('content').classList.toggle('expanded');
+            
+            // Change icon
+            const icon = this.querySelector('i');
+            if (icon.classList.contains('fa-bars')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        });
+
+        // Quiz code validation
+        document.getElementById('testMeBtn').addEventListener('click', function() {
+            const codeInput = document.getElementById('quizCode');
+            const code = codeInput.value.trim();
+            const btnText = document.querySelector('.btn-text');
+            const spinner = document.getElementById('spinner');
+            
+            if (!code) {
+                codeInput.classList.add('is-invalid');
+                return;
+            }
+            
+            // Show loading state
+            btnText.classList.add('d-none');
+            spinner.classList.remove('d-none');
+            this.disabled = true;
+            
+            // Simulate network request
+            setTimeout(() => {
+                const quiz = quizzes.find(q => q.code.toLowerCase() === code.toLowerCase());
+                
+                if (quiz) {
+                    // Valid code - redirect to quiz
+                    window.location.href = quiz.htmlfile;
+                } else {
+                    // Invalid code
+                    codeInput.classList.add('is-invalid');
+                    
+                    // Shake animation
+                    document.querySelector('.quiz-container').classList.add('animate__animated', 'animate__headShake');
+                    setTimeout(() => {
+                        document.querySelector('.quiz-container').classList.remove('animate__animated', 'animate__headShake');
+                    }, 1000);
+                }
+                
+                // Reset button
+                btnText.classList.remove('d-none');
+                spinner.classList.add('d-none');
+                this.disabled = false;
+            }, 1500);
+        });
+
+        // Remove invalid class when typing
+        document.getElementById('quizCode').addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+        });
+
+        // Add animation to input on focus
+        document.getElementById('quizCode').addEventListener('focus', function() {
+            this.classList.remove('pulse');
+            this.classList.add('animate__animated', 'animate__pulse');
+            setTimeout(() => {
+                this.classList.remove('animate__animated', 'animate__pulse');
+                this.classList.add('pulse');
+            }, 1000);
+        });
+    </script>
+
+      <!-- TypewriterJS CDN -->
+  <script src="https://unpkg.com/typewriter-effect@2.18.0/dist/core.js"></script>
+
+  <script>
+const messages = [
+  "Knowledge is power. Quiz wisely.",
+  "Every checkpoint is a step closer to mastery.",
+  "Challenge your mind, one question at a time.",
+  "Quizzes aren't tests—they're opportunities.",
+  "The more you know, the further you go.",
+  "Turn curiosity into confidence.",
+  "Fuel your brain, question by question.",
+  "Learning never stops. Neither do we.",
+  "Sharpen your skills at every checkpoint.",
+  "Smart is the new cool—prove it!"
+];
+
+
+    const target = document.getElementById('typing');
+    const typewriter = new Typewriter(target, {
+      loop: true,
+      delay: 75,
+    });
+
+    messages.forEach((msg, index) => {
+      typewriter
+        .typeString(msg)
+        .pauseFor(1000)
+        .deleteAll();
+    });
+
+    typewriter.start();
+  </script>
+</body>
+</html>
