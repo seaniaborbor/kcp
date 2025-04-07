@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz | Knowledge Checkpoint</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --accent-color: #f72585;
+            --correct-color: #4cc9f0;
+            --incorrect-color: #f72585;
+            --sidebar-width: 250px;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            min-height: 100vh;
+            transition: all 0.3s;
+        }
+        
+        /* Sidebar Styles (same as before) */
+        #sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            transition: all 0.3s;
+            z-index: 1000;
+            box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        #sidebar.collapsed {
+            left: calc(-1 * var(--sidebar-width));
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+        
+        .sidebar-menu a {
+            display: block;
+            padding: 15px 20px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+            margin: 5px 10px;
+            border-radius: 4px;
+        }
+        
+        .sidebar-menu a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent-color);
+            transform: translateX(5px);
+        }
+        
+        .sidebar-menu a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        #content {
+            margin-left: var(--sidebar-width);
+            transition: all 0.3s;
+            min-height: 100vh;
+        }
+        
+        #content.expanded {
+            margin-left: 0;
+        }
+        
+        /* Toggle Button */
+        #sidebarCollapse {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            z-index: 1001;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+        }
+        
+        #sidebarCollapse:hover {
+            transform: scale(1.1);
+            background: var(--accent-color);
+        }
+        
+        /* Quiz Container */
+        .quiz-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .quiz-title {
+            color: var(--secondary-color);
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .progress-container {
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            transition: width 0.3s ease;
+        }
+        
+        .question-container {
+            margin-bottom: 30px;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .question-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--secondary-color);
+        }
+        
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        
+        .option-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            background: white;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .option-btn:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .option-btn.correct {
+            background-color: rgba(76, 201, 240, 0.1);
+            border-color: var(--correct-color);
+            color: var(--correct-color);
+        }
+        
+        .option-btn.incorrect {
+            background-color: rgba(247, 37, 133, 0.1);
+            border-color: var(--incorrect-color);
+            color: var(--incorrect-color);
+        }
+        
+        .option-btn.disabled {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        
+        .option-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+        
+        .option-btn.correct::after {
+            background-color: var(--correct-color);
+            border-color: var(--correct-color);
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+        
+        .option-btn.incorrect::after {
+            background-color: var(--incorrect-color);
+            border-color: var(--incorrect-color);
+            content: '\f00d';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+        
+        .option-text {
+            margin-left: 35px;
+        }
+        
+        .next-btn {
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            border: none;
+            color: white;
+            font-weight: 600;
+            letter-spacing: 1px;
+            padding: 12px 30px;
+            border-radius: 10px;
+            transition: all 0.3s;
+            display: block;
+            margin: 30px auto 0;
+        }
+        
+        .next-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .quiz-result {
+            text-align: center;
+            padding: 30px;
+            display: none;
+        }
+        
+        .result-icon {
+            font-size: 5rem;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+        }
+        
+        .result-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--secondary-color);
+        }
+        
+        .score-text {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+        
+        .restart-btn {
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .restart-btn:hover {
+            background: var(--secondary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            #sidebar {
+                left: calc(-1 * var(--sidebar-width));
+            }
+            
+            #sidebar.collapsed {
+                left: 0;
+            }
+            
+            #content {
+                margin-left: 0;
+            }
+            
+            #content.expanded {
+                margin-left: var(--sidebar-width);
+            }
+            
+            .quiz-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h3>Developer Links</h3>
+        </div>
+        <div class="sidebar-menu">
+            <a href="index.html" target="_blank" class="animate__animated animate__fadeInLeft animate__delay-1s">
+                <i class="fas fa-home"></i> Home
+            </a>
+            <a href="http://borbor.epizy.com/" target="_blank" class="animate__animated animate__fadeInLeft">
+                <i class="fas fa-user"></i> About Me
+            </a>
+            <a href="https://web.facebook.com/tarnue.borbor" target="_blank" class="animate__animated animate__fadeInLeft animate__delay-1s">
+                <i class="fab fa-facebook"></i> Facebook
+            </a>
+            <a href="https://github.com/seaniaborbor" target="_blank" class="animate__animated animate__fadeInLeft animate__delay-2s">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+        </div>
+    </div>
+
+    <!-- Page Content -->
+    <div id="content">
+        <!-- Toggle Button -->
+        <button type="button" id="sidebarCollapse" class="btn">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="container py-5">
+            <div class="quiz-container">
+                <!-- Quiz Header -->
+                <div class="quiz-header">
+                    <h2 class="quiz-title"> Development of others African States</h2>
+                    <p>Grade 10 fifth marking period History Notes self test exercises</p>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                </div>
+                
+                <!-- Question Container -->
+                <div id="questionContainer">
+                    <!-- Questions will be inserted here by JavaScript -->
+                </div>
+                
+                <!-- Next Button -->
+                <button class="next-btn" id="nextBtn">Next Question</button>
+                
+                <!-- Quiz Result -->
+                <div class="quiz-result" id="quizResult">
+                    <i class="fas fa-trophy result-icon"></i>
+                    <h3 class="result-text">Quiz Completed!</h3>
+                    <p class="score-text">You scored <span id="finalScore">0</span> out of <span id="totalQuestions">0</span></p>
+                    <button class="restart-btn" id="restartBtn">Restart Quiz</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script>
+        // Quiz Questions (randomized order)
+        const quizQuestions = [
+    {
+        question: "Which empire was founded by the Sayfawa dynasty in the 9th century? (WASSCE 2021)",
+        options: [
+            "Ghana Empire",
+            "Kanem-Bornu Empire", 
+            "Mali Empire",
+            "Songhai Empire"
+        ],
+        answer: "Kanem-Bornu Empire"
+    },
+    {
+        question: "What was the capital of the Bakongo Empire? (WASSCE 2018)",
+        options: [
+            "Timbuktu",
+            "Mbanza Kongo",
+            "Great Zimbabwe",
+            "Kumasi"
+        ],
+        answer: "Mbanza Kongo"
+    },
+    {
+        question: "Which Hausa state was known for its textile production? (WAEC 2019)",
+        options: [
+            "Gobir",
+            "Kano",
+            "Zaria",
+            "Daura"
+        ],
+        answer: "Kano"
+    },
+    {
+        question: "The Golden Stool was the symbol of unity for which Akan state? (WASSCE 2020)",
+        options: [
+            "Denkyira",
+            "Akwamu",
+            "Ashanti",
+            "Fante"
+        ],
+        answer: "Ashanti"
+    },
+    {
+        question: "Which ruler introduced firearms to the Kanem-Bornu army in the 16th century? (WAEC 2017)",
+        options: [
+            "Mansa Musa",
+            "Idris Alooma",
+            "Sunni Ali",
+            "Osei Tutu"
+        ],
+        answer: "Idris Alooma"
+    },
+    {
+        question: "The Monomotapa Empire succeeded which earlier civilization? (WASSCE 2022)",
+        options: [
+            "Axum",
+            "Great Zimbabwe",
+            "Benin",
+            "Gao"
+        ],
+        answer: "Great Zimbabwe"
+    },
+    {
+        question: "Which Yoruba city was the capital of the Oyo Empire? (WAEC 2016)",
+        options: [
+            "Ile-Ife",
+            "Oyo-Ile",
+            "Ibadan",
+            "Lagos"
+        ],
+        answer: "Oyo-Ile"
+    },
+    {
+        question: "What commodity was MOST important to the economy of the Akan states? (WASSCE 2019)",
+        options: [
+            "Salt",
+            "Gold",
+            "Ivory",
+            "Slaves"
+        ],
+        answer: "Gold"
+    },
+    {
+        question: "Which European power first made contact with the Bakongo Empire? (WAEC 2020)",
+        options: [
+            "British",
+            "Portuguese",
+            "French",
+            "Dutch"
+        ],
+        answer: "Portuguese"
+    },
+    {
+        question: "The Sokoto Caliphate was established after the jihad of which leader? (WASSCE 2018)",
+        options: [
+            "Samori Toure",
+            "Usman dan Fodio",
+            "El Hadj Umar Tall",
+            "Askia Muhammad"
+        ],
+        answer: "Usman dan Fodio"
+    },
+    {
+        question: "Which technology was CRUCIAL to the expansion of the Bakongo Empire? (WAEC 2021)",
+        options: [
+            "Gunpowder",
+            "Ironworking",
+            "Shipbuilding",
+            "Writing system"
+        ],
+        answer: "Ironworking"
+    },
+    {
+        question: "The Benin Kingdom was famous for its production of what art form? (WASSCE 2017)",
+        options: [
+            "Wood carvings",
+            "Bronze sculptures",
+            "Pottery",
+            "Textiles"
+        ],
+        answer: "Bronze sculptures"
+    },
+    {
+        question: "Which empire controlled trade routes between the Zimbabwe plateau and Swahili coast? (WAEC 2022)",
+        options: [
+            "Monomotapa",
+            "Mali",
+            "Ghana",
+            "Axum"
+        ],
+        answer: "Monomotapa"
+    },
+    {
+        question: "What title was given to the ruler of the Oyo Empire? (WASSCE 2020)",
+        options: [
+            "Oba",
+            "Alaafin",
+            "Manikongo",
+            "Mwene Mutapa"
+        ],
+        answer: "Alaafin"
+    },
+    {
+        question: "The Mossi kingdoms resisted influence from which religion? (WAEC 2019)",
+        options: [
+            "Christianity",
+            "Islam",
+            "Traditional African",
+            "Hinduism"
+        ],
+        answer: "Islam"
+    },
+    {
+        question: "Which event led to the British destruction of Benin City in 1897? (WASSCE 2021)",
+        options: [
+            "The slave revolt",
+            "The Punitive Expedition",
+            "The Yoruba-Benin War",
+            "The Scramble for Africa"
+        ],
+        answer: "The Punitive Expedition"
+    },
+    {
+        question: "What was the primary export of the Monomotapa Empire? (WAEC 2018)",
+        options: [
+            "Salt",
+            "Gold",
+            "Copper",
+            "Spices"
+        ],
+        answer: "Gold"
+    },
+    {
+        question: "Which Hausa state specialized in military power? (WASSCE 2017)",
+        options: [
+            "Kano",
+            "Gobir",
+            "Katsina",
+            "Zaria"
+        ],
+        answer: "Gobir"
+    },
+    {
+        question: "Who founded the Ashanti Empire in the 17th century? (WAEC 2020)",
+        options: [
+            "Osei Tutu",
+            "Prempeh I",
+            "Opoku Ware",
+            "Kwaku Dua"
+        ],
+        answer: "Osei Tutu"
+    },
+    {
+        question: "What natural resource helped Kanem-Bornu dominate trans-Saharan trade? (WASSCE 2022)",
+        options: [
+            "Diamonds",
+            "Salt",
+            "Oil",
+            "Timber"
+        ],
+        answer: "Salt"
+    }
+];
+
+        // Quiz Variables
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let shuffledQuestions = [];
+        
+        // DOM Elements
+        const questionContainer = document.getElementById('questionContainer');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressBar = document.getElementById('progressBar');
+        const quizResult = document.getElementById('quizResult');
+        const finalScore = document.getElementById('finalScore');
+        const totalQuestions = document.getElementById('totalQuestions');
+        const restartBtn = document.getElementById('restartBtn');
+        
+        // Initialize Quiz
+        function initQuiz() {
+            // Reset quiz variables
+            currentQuestionIndex = 0;
+            score = 0;
+            
+            // Shuffle questions and options
+            shuffledQuestions = [...quizQuestions];
+            shuffleArray(shuffledQuestions);
+            
+            // Hide result, show first question
+            quizResult.style.display = 'none';
+            nextBtn.style.display = 'block';
+            
+            // Load first question
+            loadQuestion();
+        }
+        
+        // Load Question
+        function loadQuestion() {
+            // Update progress bar
+            progressBar.style.width = `${(currentQuestionIndex / shuffledQuestions.length) * 100}%`;
+            
+            // Get current question
+            const currentQuestion = shuffledQuestions[currentQuestionIndex];
+            
+            // Shuffle options
+            const shuffledOptions = [...currentQuestion.options];
+            shuffleArray(shuffledOptions);
+            
+            // Create question HTML
+            let questionHTML = `
+                <div class="question-container">
+                    <div class="question-text">${currentQuestionIndex + 1}. ${currentQuestion.question}</div>
+                    <div class="options-container">
+            `;
+            
+            // Add options
+            shuffledOptions.forEach(option => {
+                questionHTML += `
+                    <button class="option-btn" onclick="selectOption(this, '${option}', '${currentQuestion.answer}')">
+                        <span class="option-text">${option}</span>
+                    </button>
+                `;
+            });
+            
+            questionHTML += `</div></div>`;
+            
+            // Insert into container
+            questionContainer.innerHTML = questionHTML;
+            
+            // Hide next button until answer is selected
+            nextBtn.style.display = 'none';
+        }
+        
+        // Select Option
+        function selectOption(selectedOption, selectedAnswer, correctAnswer) {
+            // Disable all options
+            const allOptions = document.querySelectorAll('.option-btn');
+            allOptions.forEach(option => {
+                option.classList.add('disabled');
+            });
+            
+            // Mark correct/incorrect
+            if (selectedAnswer === correctAnswer) {
+                selectedOption.classList.add('correct');
+                score++;
+            } else {
+                selectedOption.classList.add('incorrect');
+                // Highlight correct answer
+                allOptions.forEach(option => {
+                    if (option.querySelector('.option-text').textContent === correctAnswer) {
+                        option.classList.add('correct');
+                    }
+                });
+            }
+            
+            // Show next button
+            nextBtn.style.display = 'block';
+        }
+        
+        // Next Question
+        nextBtn.addEventListener('click', () => {
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex < shuffledQuestions.length) {
+                loadQuestion();
+            } else {
+                showResult();
+            }
+        });
+        
+        // Show Result
+        function showResult() {
+            questionContainer.style.display = 'none';
+            nextBtn.style.display = 'none';
+            quizResult.style.display = 'block';
+            
+            finalScore.textContent = score;
+            totalQuestions.textContent = shuffledQuestions.length;
+            
+            // Update progress bar to 100%
+            progressBar.style.width = '100%';
+        }
+        
+        // Restart Quiz
+        restartBtn.addEventListener('click', () => {
+            questionContainer.style.display = 'block';
+            initQuiz();
+        });
+        
+        // Shuffle Array (Fisher-Yates algorithm)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+        
+        // Sidebar toggle functionality
+        document.getElementById('sidebarCollapse').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+            document.getElementById('content').classList.toggle('expanded');
+            
+            // Change icon
+            const icon = this.querySelector('i');
+            if (icon.classList.contains('fa-bars')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        });
+        
+        // Start the quiz
+        initQuiz();
+    </script>
+</body>
+</html>
